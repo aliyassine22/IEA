@@ -372,7 +372,7 @@ def run_simulation():
             AgentList.append(Agent(x, 1-y, i))
             i+=1
 
-    GRID = Environment(shape='diamond')
+    GRID = Environment(shape='rectangle')
 
 
     if(len(GRID.shape_positions)<len(AgentList)):
@@ -380,7 +380,12 @@ def run_simulation():
     
     for i in range(20):
         plotState(GRID,AgentList)
+        
+        # sort AgentList based on the weight that it is in, so the decision  making is done based on the highest weight first
+        AgentList.sort(key=lambda agent: GRID.weights[(agent.x, agent.y)], reverse=True)
+
         for agent in AgentList:
+            print(agent.agent_id)
             # takeMoveVonNeumann(agent, GRID, AgentList)
             takeMoveMoore(agent, GRID, AgentList)
             print(i)

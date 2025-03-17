@@ -144,7 +144,7 @@ if __name__ == "__main__":
             AgentList.append(Agent(x, 1-y, i))
             i+=1
 
-    GRID = Environment(shape='diamond')
+    GRID = Environment(shape='cross')
     if(len(GRID.shape_positions)<len(AgentList)):
         AgentList=AgentList[0:len(GRID.shape_positions)]
     
