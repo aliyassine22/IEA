@@ -2,7 +2,7 @@ import heapq
 import time
 from matplotlib import pyplot as plt
 import numpy as np
-from greedyWeightMap import Agent,plotState,Environment,hungarianAssignment, plot_shape, plot_agents
+from greedyWeightMap import Agent,plotState,Environment,hungarianAssignment, plot_shape, plot_agents, plot_barriers
 # Node for the A* search
 class Node:
     def __init__(self, position, timestep, g, h, parent=None):
@@ -123,6 +123,7 @@ def plotState(environment, agentList,agent_assignment ,GRID_SIZE=10):
     plot_shape(ax, environment.shape_positions, GRID_SIZE)   # colored destination cells
     plot_agents(ax, agent_positions, GRID_SIZE)  # agent circles
     plot_destinations(ax, agent_assignment, GRID_SIZE)        # weight numbers overlay
+    plot_barriers(ax, environment.barriers, GRID_SIZE)  # barrier cells
     plt.show()
 
 def plot_destinations(ax,agent_assignments,GRID_SIZE):
@@ -132,7 +133,7 @@ def plot_destinations(ax,agent_assignments,GRID_SIZE):
         x_dest=destination[0]
         y_dest=destination[1]
         ax.text(x_coor, y_coor, str(agent.agent_id), ha='center', va='center', fontsize=8, color='black')
-        ax.text(x_dest, y_dest, str(agent.agent_id), ha='center', va='center', fontsize=8, color='black')
+        # ax.text(x_dest, y_dest, str(agent.agent_id), ha='center', va='center', fontsize=8, color='black')
         # ax.arrow(x_coor, y_coor, x_dest-x_coor, y_dest-y_coor, head_width=0.1, head_length=0.1, fc='black', ec='black')
 
 if __name__ == "__main__":
@@ -144,7 +145,7 @@ if __name__ == "__main__":
             AgentList.append(Agent(x, 1-y, i))
             i+=1
 
-    GRID = Environment(shape='cross')
+    GRID = Environment(shape='diamond')
     if(len(GRID.shape_positions)<len(AgentList)):
         AgentList=AgentList[0:len(GRID.shape_positions)]
     

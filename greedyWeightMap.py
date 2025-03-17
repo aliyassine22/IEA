@@ -4,6 +4,7 @@ import matplotlib.pyplot as plt
 from collections import deque
 from scipy.optimize import linear_sum_assignment
 import matplotlib.pyplot as plt
+import random
 
 class Agent:
     def __init__(self, x, y, agent_id):
@@ -34,6 +35,7 @@ def takeMoveVonNeumann(agent, env,agentList):
         if 0 <= x < env.GRID_SIZE and 0 <= y < env.GRID_SIZE
     }
     possible_new_positions -= occupiedSquares  # Remove occupied positions
+    possible_new_positions -= env.barriers  # Remove barrier positions
 
     possible_new_positions.remove(agent.previous_position) # makes sure the agent doesnt go back to their previous position getting stuck in the loop
     print(possible_new_positions)
@@ -82,7 +84,8 @@ def takeMoveMoore(agent, env,agentList):
         if 0 <= x < env.GRID_SIZE and 0 <= y < env.GRID_SIZE
     }
     possible_new_positions -= occupiedSquares  # Remove occupied positions
-
+    possible_new_positions -= env.barriers  # Remove barrier positions
+    
     if agent.previous_position in possible_new_positions and len(possible_new_positions) > 1:
         possible_new_positions.remove(agent.previous_position)
     # possible_new_positions.add((x_coordinate,y_coordinate)) # add a position to stay in place
@@ -109,7 +112,7 @@ def takeMoveMoore(agent, env,agentList):
      
 
 class Environment:
-    def __init__(self,shape='diamond'):
+    def __init__(self,shape='diamond',barriers=True):
         self.GRID_SIZE=10
         if shape=='diamond':
             upper_half, lower_half, shape_positions = generate_diamond(self.GRID_SIZE)
@@ -121,7 +124,37 @@ class Environment:
         
         self.weights=compute_weights(shape_positions,self.GRID_SIZE)
         self.shape_positions = shape_positions   
-        
+        if barriers:
+            self.barriers=generate_barriers(self.GRID_SIZE, shape_positions)
+
+def generate_barriers(GRID_SIZE, shape_positions, barriernumber=3):
+    """
+    Generate a set of barrier positions that are not part of the shape.
+    The barriers are placed on the grid boundary and on the diagonals
+    of the shape.
+
+    Parameters:
+        GRID_SIZE (int): The size of the grid.
+        shape_positions (set): The set of shape positions.
+    """
+
+    barriers = set()
+
+    # First barrier
+    first_barrier = random.choice([(1,2), (1,3), (2,2)])
+    barriers.add(first_barrier)
+
+    # Second barrier
+    second_barrier = random.choice([(8,2), (9,3), (9,4)])
+    barriers.add(second_barrier)
+
+    # Third barrier
+    third_barrier = random.choice([(5,2), (9,6), (9,8)])
+    barriers.add(third_barrier)
+    
+    return barriers
+
+
 def generate_diamond(GRID_SIZE=10):
     center_x, center_y = GRID_SIZE // 2, GRID_SIZE // 2
     shape_positions = set()
@@ -338,7 +371,10 @@ def plot_weights(ax, weight_map, GRID_SIZE=10):
         for y in range(GRID_SIZE):
             w = weight_map[(x, y)]
             ax.text(x, y, str(w), ha='center', va='center', fontsize=8, color='black')
-
+def plot_barriers(ax, barrier_positions, GRID_SIZE=10):
+    for x, y in barrier_positions:
+        rect = plt.Rectangle((x - 0.5, y - 0.5), 1, 1, color='black')
+        ax.add_patch(rect)
 # Combined function to plot the entire state on a single Axes
 def plotState(environment, agentList, GRID_SIZE=10):
     agent_positions = [(agent.x, agent.y) for agent in agentList]
@@ -354,7 +390,7 @@ def plotState(environment, agentList, GRID_SIZE=10):
     plot_shape(ax, environment.shape_positions, GRID_SIZE)   # colored destination cells
     plot_agents(ax, agent_positions, GRID_SIZE)  # agent circles
     plot_weights(ax, weight_map, GRID_SIZE)        # weight numbers overlay
-    
+    plot_barriers(ax, environment.barriers, GRID_SIZE)
     ax.set_aspect('equal', adjustable='box')
     plt.show()
 
