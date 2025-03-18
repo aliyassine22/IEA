@@ -35,7 +35,8 @@ def takeMoveVonNeumann(agent, env,agentList):
         if 0 <= x < env.GRID_SIZE and 0 <= y < env.GRID_SIZE
     }
     possible_new_positions -= occupiedSquares  # Remove occupied positions
-    possible_new_positions -= env.barriers  # Remove barrier positions
+    if hasattr(env, 'barriers'):
+        possible_new_positions -= env.barriers  # Remove barrier positions
 
     possible_new_positions.remove(agent.previous_position) # makes sure the agent doesnt go back to their previous position getting stuck in the loop
     print(possible_new_positions)
@@ -84,8 +85,8 @@ def takeMoveMoore(agent, env,agentList):
         if 0 <= x < env.GRID_SIZE and 0 <= y < env.GRID_SIZE
     }
     possible_new_positions -= occupiedSquares  # Remove occupied positions
-    possible_new_positions -= env.barriers  # Remove barrier positions
-    
+    if hasattr(env, 'barriers'):
+        possible_new_positions -= env.barriers  # Remove barrier positions    
     if agent.previous_position in possible_new_positions and len(possible_new_positions) > 1:
         possible_new_positions.remove(agent.previous_position)
     # possible_new_positions.add((x_coordinate,y_coordinate)) # add a position to stay in place
@@ -112,7 +113,7 @@ def takeMoveMoore(agent, env,agentList):
      
 
 class Environment:
-    def __init__(self,shape='diamond',barriers=True):
+    def __init__(self,shape='diamond',barriers_generation=True):
         self.GRID_SIZE=10
         if shape=='diamond':
             upper_half, lower_half, shape_positions = generate_diamond(self.GRID_SIZE)
@@ -124,7 +125,7 @@ class Environment:
         
         self.weights=compute_weights(shape_positions,self.GRID_SIZE)
         self.shape_positions = shape_positions   
-        if barriers:
+        if barriers_generation:
             self.barriers=generate_barriers(self.GRID_SIZE, shape_positions)
 
 def generate_barriers(GRID_SIZE, shape_positions, barriernumber=3):
@@ -390,7 +391,8 @@ def plotState(environment, agentList, GRID_SIZE=10):
     plot_shape(ax, environment.shape_positions, GRID_SIZE)   # colored destination cells
     plot_agents(ax, agent_positions, GRID_SIZE)  # agent circles
     plot_weights(ax, weight_map, GRID_SIZE)        # weight numbers overlay
-    plot_barriers(ax, environment.barriers, GRID_SIZE)
+    if hasattr(environment, 'barriers'):
+        plot_barriers(ax, environment.barriers, GRID_SIZE)
     ax.set_aspect('equal', adjustable='box')
     plt.show()
 
@@ -408,7 +410,7 @@ def run_simulation():
             AgentList.append(Agent(x, 1-y, i))
             i+=1
 
-    GRID = Environment(shape='diamond')
+    GRID = Environment(shape='cross', barriers_generation=False)
 
 
     if(len(GRID.shape_positions)<len(AgentList)):

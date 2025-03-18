@@ -123,7 +123,8 @@ def plotState(environment, agentList,agent_assignment ,GRID_SIZE=10):
     plot_shape(ax, environment.shape_positions, GRID_SIZE)   # colored destination cells
     plot_agents(ax, agent_positions, GRID_SIZE)  # agent circles
     plot_destinations(ax, agent_assignment, GRID_SIZE)        # weight numbers overlay
-    plot_barriers(ax, environment.barriers, GRID_SIZE)  # barrier cells
+    if hasattr(environment, 'barriers'):
+        plot_barriers(ax, environment.barriers, GRID_SIZE)  # barrier cells
     plt.show()
 
 def plot_destinations(ax,agent_assignments,GRID_SIZE):
@@ -145,7 +146,7 @@ if __name__ == "__main__":
             AgentList.append(Agent(x, 1-y, i))
             i+=1
 
-    GRID = Environment(shape='diamond')
+    GRID = Environment(shape='diamond',barriers_generation=False)
     if(len(GRID.shape_positions)<len(AgentList)):
         AgentList=AgentList[0:len(GRID.shape_positions)]
     

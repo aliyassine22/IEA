@@ -91,8 +91,8 @@ def takeMoveMoore(agent, env,agentList):
     }
     possible_new_positions -= occupiedSquares  # Remove occupied positions
 
-    if agent.previous_position in possible_new_positions and len(possible_new_positions) > 1:
-        possible_new_positions.remove(agent.previous_position)
+    # if agent.previous_position in possible_new_positions and len(possible_new_positions) > 1:
+    #     possible_new_positions.remove(agent.previous_position)
     # possible_new_positions.add((x_coordinate,y_coordinate)) # add a position to stay in place
     print(possible_new_positions)
     # compute move_weights
@@ -390,7 +390,7 @@ def run_simulation():
         st.session_state.step = 0
         st.session_state.running = False
         # Initialize environment and agent list in session state
-        st.session_state.grid = Environment(shape='diamond')
+        st.session_state.grid = Environment(shape='rectangle')
         st.session_state.agents = [Agent(x, 1-y, x + y) for y in range(2) for x in range(10)]
 
     AgentList = st.session_state.agents
