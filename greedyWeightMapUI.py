@@ -91,8 +91,8 @@ def takeMoveMoore(agent, env,agentList):
     }
     possible_new_positions -= occupiedSquares  # Remove occupied positions
 
-    # if agent.previous_position in possible_new_positions and len(possible_new_positions) > 1:
-    #     possible_new_positions.remove(agent.previous_position)
+    if agent.previous_position in possible_new_positions and len(possible_new_positions) > 1:
+        possible_new_positions.remove(agent.previous_position)
     # possible_new_positions.add((x_coordinate,y_coordinate)) # add a position to stay in place
     print(possible_new_positions)
     # compute move_weights
@@ -117,7 +117,7 @@ def takeMoveMoore(agent, env,agentList):
      
 
 class Environment:
-    def __init__(self,shape='diamond'):
+    def __init__(self,shape):
         self.GRID_SIZE=10
         if shape=='diamond':
             upper_half, lower_half, shape_positions = generate_diamond(self.GRID_SIZE)
@@ -283,7 +283,7 @@ def generate_cross(GRID_SIZE=10):
     sorted_blocks = sorted(cross_coordinates, key=lambda pos: -pos[0])
     upper_half = set(sorted_blocks[:10])
     lower_half = set(sorted_blocks[10:])
-    return upper_half, lower_half,cross_coordinates
+    return cross_coordinates
 
 
 def compute_weights(shape_positions, GRID_SIZE=10):
@@ -338,6 +338,7 @@ def compute_weights(shape_positions, GRID_SIZE=10):
 def plot_shape(ax, shape_positions, GRID_SIZE=10):
     for x, y in shape_positions:
         # Draw filled square with some transparency
+        #rect = plt.Rectangle((x-0.5, y-0.5), 1, 1, color='red', alpha=0.6)     The following is used for the new ALgo
         rect = plt.Rectangle((x, y), 1, 1, color='red', alpha=0.6)
         ax.add_patch(rect)
 
@@ -346,6 +347,7 @@ def plot_shape(ax, shape_positions, GRID_SIZE=10):
 def plot_agents(ax, agent_positions, GRID_SIZE=10):
 
     for x, y in agent_positions:
+        # circle = plt.Circle((x, y), 0.3, color='green', alpha=0.8)    The following is used for the new ALgo
         circle = plt.Circle((x+0.5, y+0.5), 0.3, color='green', alpha=0.8)
         ax.add_patch(circle)
 
@@ -381,22 +383,23 @@ def plotState(ax, environment, agentList, GRID_SIZE=10):
     # st.pyplot(fig)
 # Example usage with 20 agents
 
-    
 def run_simulation():
     import time
 
-    # Initialize session state variables
-    if 'step' not in st.session_state:
+    st.title("Single Grid Simulation")
+    shape_type = st.selectbox("Select the Shape", ["diamond", "rectangle", "cross"], index=0)
+
+    # Initialize session state variables (update if shape changes)
+    if 'grid' not in st.session_state or st.session_state.selected_shape != shape_type:
+        st.session_state.selected_shape = shape_type  # store selected shape
+        st.session_state.grid = Environment(shape=shape_type)
+        st.session_state.agents = [Agent(x, 1-y, x + y) for y in range(2) for x in range(10)]
         st.session_state.step = 0
         st.session_state.running = False
-        # Initialize environment and agent list in session state
-        st.session_state.grid = Environment(shape='rectangle')
-        st.session_state.agents = [Agent(x, 1-y, x + y) for y in range(2) for x in range(10)]
+        st.session_state.iter = 0  # persistent iteration counter
 
     AgentList = st.session_state.agents
     GRID = st.session_state.grid
-
-    st.title("Single Grid Simulation")
 
     # Adjust the number of agents if necessary
     if len(GRID.shape_positions) < len(AgentList):
@@ -404,32 +407,59 @@ def run_simulation():
 
     fig, ax = plt.subplots(figsize=(6, 6))
     plot_placeholder = st.empty()
+    iter_placeholder = st.empty()
 
-    # Button to run the entire simulation
-    if st.button("Run Simulation"):
-        st.session_state.running = True
-        while st.session_state.running:
-            fig = plotState(ax, GRID, AgentList, GRID.GRID_SIZE)
-            plot_placeholder.pyplot(fig)
-            for agent in AgentList:
-                takeMoveMoore(agent, GRID, AgentList)
-            time. sleep(1)
+    # Display the current iteration (initial state should show 0)
+    iter_placeholder.write(f"Step: {st.session_state.iter}")
 
-    # Button to run each step independently
-    if st.button("Run Iteration"):
-        st.session_state.step += 1
+    # Button to display the initial state (do not count this as a move)
+    if st.button("Show Grid"):
+        st.session_state.iter = 0  # Reset iteration counter to 0
         fig = plotState(ax, GRID, AgentList, GRID.GRID_SIZE)
         plot_placeholder.pyplot(fig)
+        iter_placeholder.write(f"Step: {st.session_state.iter}")
+
+    # Button to run the entire simulation automatically
+    if st.button("Run Simulation"):
+        st.session_state.running = True
+        
+        # Run simulation continuously
+        while st.session_state.running:
+            # Move agents first, then increment counter (so the initial state isn't counted)
+            for agent in AgentList:
+                takeMoveMoore(agent, GRID, AgentList)
+            st.session_state.iter += 1  # Increment after agents have moved
+            iter_placeholder.write(f"Step: {st.session_state.iter}")
+            
+            fig = plotState(ax, GRID, AgentList, GRID.GRID_SIZE)
+            plot_placeholder.pyplot(fig)
+            time.sleep(1)
+
+        # After stopping, display the final state
+        iter_placeholder.write(f"Simulation stopped at Step: {st.session_state.iter}")
+        fig = plotState(ax, GRID, AgentList, GRID.GRID_SIZE)
+        plot_placeholder.pyplot(fig)
+
+    # Button to run each step manually
+    if st.button("Next Iteration"):
+        # Move agents first, then increment counter
         for agent in AgentList:
             takeMoveMoore(agent, GRID, AgentList)
+        st.session_state.iter += 1  # Increment the counter after moving
+        iter_placeholder.write(f"Step: {st.session_state.iter}")
+        fig = plotState(ax, GRID, AgentList, GRID.GRID_SIZE)
+        plot_placeholder.pyplot(fig)
 
     # Button to stop the simulation
     if st.button("Stop Simulation"):
         st.session_state.running = False
-
+        iter_placeholder.write(f"Simulation stopped at Step: {st.session_state.iter}")
+        fig = plotState(ax, GRID, AgentList, GRID.GRID_SIZE)
+        plot_placeholder.pyplot(fig)
 
 if __name__ == "__main__":
     run_simulation()
+
 
 # if you get to a point where its not filling up use distance to remaining blocks to take the steps
 
@@ -485,6 +515,8 @@ def hungarianAssignment(agentList, shape_positions):
         Dict_Agent_Destination[agentList[j]] = shape_positions_list[i]
 
     return Dict_Agent_Destination    ### AGENT TO COORDINATE DICTIONARY
+
+
 
 ## trying the new association
 # def hungarianAssignment(agentList, shape_positions):   
