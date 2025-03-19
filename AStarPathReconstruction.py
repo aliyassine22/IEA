@@ -182,6 +182,7 @@ if __name__ == "__main__":
                 reservation_table.add((final_position, t))
                 # Also, extend the agent's path so that the agent remains at the destination
                 agent.path.append(final_position)
+            print(reservation_table)
         else:
             print("No valid path found.")
 

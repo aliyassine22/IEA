@@ -410,12 +410,14 @@ def run_simulation():
             AgentList.append(Agent(x, 1-y, i))
             i+=1
 
-    GRID = Environment(shape='cross', barriers_generation=False)
+    GRID = Environment(shape='diamond', barriers_generation=False)
 
 
     if(len(GRID.shape_positions)<len(AgentList)):
         AgentList=AgentList[0:len(GRID.shape_positions)]
     
+    # AgentList.sort(key=lambda agent: (1-agent.y, abs(agent.x - 5)))
+
     for i in range(20):
         plotState(GRID,AgentList)
         for agent in AgentList:

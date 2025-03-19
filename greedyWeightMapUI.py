@@ -5,7 +5,7 @@ from collections import deque
 from scipy.optimize import linear_sum_assignment
 import matplotlib.pyplot as plt
 import streamlit as st
-
+import random
 class Agent:
     def __init__(self, x, y, agent_id):
         self.x = x
@@ -90,9 +90,10 @@ def takeMoveMoore(agent, env,agentList):
         if 0 <= x < env.GRID_SIZE and 0 <= y < env.GRID_SIZE
     }
     possible_new_positions -= occupiedSquares  # Remove occupied positions
-
-    if agent.previous_position in possible_new_positions and len(possible_new_positions) > 1:
-        possible_new_positions.remove(agent.previous_position)
+    if hasattr(env, 'barriers'):
+        possible_new_positions -= env.barriers  # Remove barrier positions
+    # if agent.previous_position in possible_new_positions and len(possible_new_positions) > 1:
+    #     possible_new_positions.remove(agent.previous_position)
     # possible_new_positions.add((x_coordinate,y_coordinate)) # add a position to stay in place
     print(possible_new_positions)
     # compute move_weights
@@ -117,7 +118,7 @@ def takeMoveMoore(agent, env,agentList):
      
 
 class Environment:
-    def __init__(self,shape):
+    def __init__(self,shape,barriers_generation=False):
         self.GRID_SIZE=10
         if shape=='diamond':
             upper_half, lower_half, shape_positions = generate_diamond(self.GRID_SIZE)
@@ -129,7 +130,9 @@ class Environment:
         
         self.weights=compute_weights(shape_positions,self.GRID_SIZE)
         self.shape_positions = shape_positions   
-        
+        if barriers_generation:
+            self.barriers=generate_barriers(self.GRID_SIZE, shape_positions)
+
 def generate_diamond(GRID_SIZE=10):
     center_x, center_y = GRID_SIZE // 2, GRID_SIZE // 2
     shape_positions = set()
@@ -150,6 +153,32 @@ def generate_diamond(GRID_SIZE=10):
     lower_half = set(sorted_blocks[10:])
     return upper_half, lower_half, shape_positions
 
+def generate_barriers(GRID_SIZE, shape_positions, barriernumber=3):
+    """
+    Generate a set of barrier positions that are not part of the shape.
+    The barriers are placed on the grid boundary and on the diagonals
+    of the shape.
+
+    Parameters:
+        GRID_SIZE (int): The size of the grid.
+        shape_positions (set): The set of shape positions.
+    """
+
+    barriers = set()
+
+    # First barrier
+    first_barrier = random.choice([(1,2), (1,3), (2,2)])
+    barriers.add(first_barrier)
+
+    # Second barrier
+    second_barrier = random.choice([(8,2), (9,3), (9,4)])
+    barriers.add(second_barrier)
+
+    # Third barrier
+    third_barrier = random.choice([(5,2), (9,6), (9,8)])
+    barriers.add(third_barrier)
+    
+    return barriers
 def generate_rectangle(GRID_SIZE=10):
     center_x, center_y = GRID_SIZE // 2, GRID_SIZE // 2
     rect_x = center_x - 2
@@ -357,7 +386,10 @@ def plot_weights(ax, weight_map, GRID_SIZE=10):
         for y in range(GRID_SIZE):
             w = weight_map[(x, y)]
             ax.text(x+0.5, y+0.5, str(w), ha='center', va='center', fontsize=8, color='black')
-
+def plot_barriers(ax, barrier_positions, GRID_SIZE=10):
+    for x, y in barrier_positions:
+        rect = plt.Rectangle((x , y ), 1, 1, color='black')
+        ax.add_patch(rect)
 # Combined function to plot the entire state on a single Axes
 def plotState(ax, environment, agentList, GRID_SIZE=10):
     
@@ -377,7 +409,8 @@ def plotState(ax, environment, agentList, GRID_SIZE=10):
     plot_shape(ax, environment.shape_positions, GRID_SIZE)   # colored destination cells
     plot_agents(ax, agent_positions, GRID_SIZE)  # agent circles
     plot_weights(ax, weight_map, GRID_SIZE)        # weight numbers overlay
-    
+    if hasattr(environment, 'barriers'):
+        plot_barriers(ax, environment.barriers, GRID_SIZE)
     ax.set_aspect('equal', adjustable='box')
     return fig
     # st.pyplot(fig)
@@ -388,11 +421,13 @@ def run_simulation():
 
     st.title("Single Grid Simulation")
     shape_type = st.selectbox("Select the Shape", ["diamond", "rectangle", "cross"], index=0)
+    barriers_flag = st.selectbox("Barriers", ["True","False"], index=0)
 
     # Initialize session state variables (update if shape changes)
-    if 'grid' not in st.session_state or st.session_state.selected_shape != shape_type:
+    if 'grid' not in st.session_state or st.session_state.selected_shape != shape_type or st.session_state.barriersBool != barriers_flag:
         st.session_state.selected_shape = shape_type  # store selected shape
-        st.session_state.grid = Environment(shape=shape_type)
+        st.session_state.barriersBool= barriers_flag  # store selected shape
+        st.session_state.grid = Environment(shape=shape_type, barriers_generation=True if st.session_state.barriersBool=="True" else False)
         st.session_state.agents = [Agent(x, 1-y, x + y) for y in range(2) for x in range(10)]
         st.session_state.step = 0
         st.session_state.running = False
@@ -425,6 +460,8 @@ def run_simulation():
         
         # Run simulation continuously
         while st.session_state.running:
+
+            # sort agent list based on closeness to the center while giving priority to the top row (y=1)
             # Move agents first, then increment counter (so the initial state isn't counted)
             for agent in AgentList:
                 takeMoveMoore(agent, GRID, AgentList)
