@@ -470,7 +470,7 @@ def hungarianAssignment(agentList, shape_positions):
     for i, pos in enumerate(shape_positions_list):
         for j, agent in enumerate(agentList):
             cost_matrix[i, j] = abs(agent.x - pos[0]) + abs(agent.y - pos[1])
-    
+    print('hahahaha' ,cost_matrix)
     # Solve the assignment problem using the Hungarian algorithm.
     row_ind, col_ind = linear_sum_assignment(cost_matrix)
     

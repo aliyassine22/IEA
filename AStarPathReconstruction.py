@@ -146,7 +146,7 @@ if __name__ == "__main__":
             AgentList.append(Agent(x, 1-y, i))
             i+=1
 
-    GRID = Environment(shape='diamond',barriers_generation=False)
+    GRID = Environment(shape='diamond',barriers_generation=True)
     if(len(GRID.shape_positions)<len(AgentList)):
         AgentList=AgentList[0:len(GRID.shape_positions)]
     
@@ -154,7 +154,10 @@ if __name__ == "__main__":
     print(Agent_Assignemnt)
     GRID_SIZE =GRID.GRID_SIZE
     reservation_table = set()
-    
+
+    for barrier in GRID.barriers:
+        for i in range(0,20):
+            reservation_table.add(((barrier[0],barrier[1]),i))
     
     # Define start and goal positions for an agent and the start time
     for agent in AgentList:
