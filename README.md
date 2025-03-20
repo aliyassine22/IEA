@@ -88,13 +88,13 @@ Each method assigns destinations to agents and computes collision-free paths usi
 
   - Works well for simple environments, but struggles with multiple barriers.
   - No booking mechanism, leading to conflicts over high-reward cells.
-- Hungarian Booking + A:*
+- Hungarian Booking + A*:
 
   - Provides a globally optimal assignment.
   - Ensures collision-free movement via a reservation table.
   - Higher computation cost on larger grids or with many agents.
-- Custom Lane-Based Booking + A:*
+- Custom Lane-Based Booking + A*:
 
   - Simpler assignment logic using lanes.
-  - Near perfect performance in high-density, centralized shapes.
+  - Near-perfect performance in high-density, centralized shapes.
   - Not guaranteed to be globally optimal but performs well in practice.
