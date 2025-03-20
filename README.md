@@ -75,7 +75,7 @@ Each method assigns destinations to agents and computes collision-free paths usi
 - **Running the Implementation:**  
   Use Streamlit to run the UI for this algorithm:  
   ```bash
-  streamlit run newAlgoUIcopy.py
+  streamlit run newAlgoUI.py
  - **Technologies Used**
 - Programming Language: Python 3
 - Libraries & Tools:
