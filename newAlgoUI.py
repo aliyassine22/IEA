@@ -167,9 +167,14 @@ def plotState_custom(environment, agentList, agent_assignment, GRID_SIZE=10):
     for agent, destination in agent_assignment.items():
         ax.text(agent.x+0.5, agent.y+0.5, str(agent.agent_id), ha='center', va='center', fontsize=8, color='black')
         # ax.text(destination[0]+0.5, destination[1]+0.5, str(agent.agent_id), ha='center', va='center', fontsize=8, color='black')
+    if hasattr(environment, 'barriers'):
+        plot_barriers(ax, environment.barriers, GRID_SIZE)
     plt.close(fig)
     return fig
-
+def plot_barriers(ax, barrier_positions, GRID_SIZE=10):
+    for x, y in barrier_positions:
+        rect = plt.Rectangle((x , y ), 1, 1, color='black')
+        ax.add_patch(rect)
 # -------------------------
 # Streamlit Simulation UI
 # -------------------------
@@ -179,11 +184,14 @@ def run_simulation():
     
     # Allow the user to select the destination shape.
     shape_type = st.selectbox("Select the Shape", ["diamond", "rectangle", "cross"], index=0)
-    
+    barriers_flag = st.selectbox("Barriers", ["True","False"], index=0)
+
     # Initialize session state variables when shape changes or on first run.
-    if 'grid' not in st.session_state or st.session_state.selected_shape != shape_type:
+    if 'grid' not in st.session_state or st.session_state.selected_shape != shape_type or st.session_state.barriersBool != barriers_flag:
         st.session_state.selected_shape = shape_type
-        st.session_state.grid = Environment(shape=shape_type)
+        st.session_state.barriersBool= barriers_flag  # store selected shape
+        st.session_state.grid = Environment(shape=shape_type,barriers_generation=True if st.session_state.barriersBool=="True" else False)
+
         agents = []
         i = 0
         for y in range(2):  # Create agents in 2 rows × 10 columns.
@@ -199,7 +207,11 @@ def run_simulation():
         st.session_state.iter = 0
         st.session_state.simulation_steps = 20
         st.session_state.reservation_table = set()
-        
+        if(hasattr(st.session_state.grid, 'barriers')):
+            for barrier in st.session_state.grid.barriers:
+                for i in range(st.session_state.simulation_steps):
+                    st.session_state.reservation_table.add(((barrier[0], barrier[1]), i))
+
         # For each agent, plan its path from start to destination.
         for agent in st.session_state.agents:
             start_square = (agent.x, agent.y)
