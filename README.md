@@ -59,7 +59,7 @@ Each method assigns destinations to agents and computes collision-free paths usi
 - **Running the Implementation:**  
   Execute the UI with:  
   ```bash
-  python testUI.py
+  streamlit run testUI.py
 ### 3. Custom Lane-Based Booking + A* Algorithm
 
 - **Lane-Based Assignment:**  
